@@ -58,6 +58,20 @@ fn push(lua: &Lua, (t, args): (LuaTable, LuaVariadic<LuaValue>)) -> LuaResult<Lu
     Ok(len)
 }
 
+fn some(lua: &Lua, (t, f): (LuaTable, LuaFunction)) -> LuaResult<bool> {
+    let len = len(lua, t.clone())?;
+    let mut i = 1 as LuaInteger;
+    while i <= len {
+        let e = t.get::<LuaValue>(i)?;
+        let b = f.call::<bool>(e)?;
+        if b {
+            return Ok(true);
+        }
+        i += 1;
+    }
+    Ok(false)
+}
+
 pub fn module(lua: &Lua) -> LuaResult<LuaTable> {
     let exports = lua.create_table()?;
     exports.set("assign", lua.create_function(assign)?)?;
@@ -65,5 +79,6 @@ pub fn module(lua: &Lua) -> LuaResult<LuaTable> {
     exports.set("deepclone", lua.create_function(deepclone)?)?;
     exports.set("len", lua.create_function(len)?)?;
     exports.set("push", lua.create_function(push)?)?;
+    exports.set("some", lua.create_function(some)?)?;
     Ok(exports)
 }
