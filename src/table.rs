@@ -1,11 +1,23 @@
 use mlua::prelude::*;
 
+fn assign(_: &Lua, (outt, int): (LuaTable, LuaTable)) -> LuaResult<()> {
+    for i in int.pairs::<LuaValue, LuaValue>() {
+        let (k, v) = i?;
+        outt.set(k, v)?;
+    }
+    if let Some(m) = int.metatable() {
+        outt.set_metatable(Some(m))?;
+    }
+    Ok(())
+}
+
 fn clone(lua: &Lua, t: LuaTable) -> LuaResult<LuaTable> {
     let t2 = lua.create_table()?;
     for i in t.pairs::<LuaValue, LuaValue>() {
         let (k, v) = i?;
         t2.set(k, v)?;
     }
+    t2.set_metatable(t.metatable())?;
     Ok(t2)
 }
 
@@ -20,6 +32,7 @@ fn deepclone(lua: &Lua, t: LuaTable) -> LuaResult<LuaTable> {
             _ => t2.set(k, v)?,
         }
     }
+    t2.set_metatable(t.metatable())?;
     Ok(t2)
 }
 
@@ -47,6 +60,7 @@ fn push(lua: &Lua, (t, args): (LuaTable, LuaVariadic<LuaValue>)) -> LuaResult<Lu
 
 pub fn module(lua: &Lua) -> LuaResult<LuaTable> {
     let exports = lua.create_table()?;
+    exports.set("assign", lua.create_function(assign)?)?;
     exports.set("clone", lua.create_function(clone)?)?;
     exports.set("deepclone", lua.create_function(deepclone)?)?;
     exports.set("len", lua.create_function(len)?)?;
