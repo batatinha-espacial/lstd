@@ -36,6 +36,20 @@ fn deepclone(lua: &Lua, t: LuaTable) -> LuaResult<LuaTable> {
     Ok(t2)
 }
 
+fn every(lua: &Lua, (t, f): (LuaTable, LuaFunction)) -> LuaResult<bool> {
+    let len = len(lua, t.clone())?;
+    let mut i = 1 as LuaInteger;
+    while i <= len {
+        let e = t.get::<LuaValue>(i)?;
+        let b = f.call::<bool>(e)?;
+        if !b {
+            return Ok(false);
+        }
+        i += 1;
+    }
+    Ok(true)
+}
+
 fn len(_: &Lua, t: LuaTable) -> LuaResult<LuaInteger> {
     let mut i = 0usize;
     loop {
@@ -77,6 +91,7 @@ pub fn module(lua: &Lua) -> LuaResult<LuaTable> {
     exports.set("assign", lua.create_function(assign)?)?;
     exports.set("clone", lua.create_function(clone)?)?;
     exports.set("deepclone", lua.create_function(deepclone)?)?;
+    exports.set("every", lua.create_function(every)?)?;
     exports.set("len", lua.create_function(len)?)?;
     exports.set("push", lua.create_function(push)?)?;
     exports.set("some", lua.create_function(some)?)?;
