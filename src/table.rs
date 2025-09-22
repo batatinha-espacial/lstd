@@ -1,5 +1,14 @@
 use mlua::prelude::*;
 
+fn clone(lua: &Lua, t: LuaTable) -> LuaResult<LuaTable> {
+    let t2 = lua.create_table()?;
+    for i in t.pairs::<LuaValue, LuaValue>() {
+        let (k, v) = i?;
+        t2.set(k, v)?;
+    }
+    Ok(t2)
+}
+
 fn len(_: &Lua, t: LuaTable) -> LuaResult<LuaInteger> {
     let mut i = 0usize;
     loop {
@@ -24,6 +33,7 @@ fn push(lua: &Lua, (t, args): (LuaTable, LuaVariadic<LuaValue>)) -> LuaResult<Lu
 
 pub fn module(lua: &Lua) -> LuaResult<LuaTable> {
     let exports = lua.create_table()?;
+    exports.set("clone", lua.create_function(clone)?)?;
     exports.set("len", lua.create_function(len)?)?;
     exports.set("push", lua.create_function(push)?)?;
     Ok(exports)
