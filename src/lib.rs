@@ -45,6 +45,8 @@ fn printnnl(_: &Lua, args: LuaVariadic<String>) -> LuaResult<()> {
 
 mod string;
 
+mod table;
+
 #[mlua::lua_module(name = "lstd")]
 fn module(lua: &Lua) -> LuaResult<LuaTable> {
     let exports = lua.create_table()?;
@@ -57,5 +59,6 @@ fn module(lua: &Lua) -> LuaResult<LuaTable> {
     exports.set("print", lua.create_function(print)?)?;
     exports.set("printnnl", lua.create_function(printnnl)?)?;
     exports.set("string", string::module(lua)?)?;
+    exports.set("table", table::module(lua)?)?;
     Ok(exports)
 }
