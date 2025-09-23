@@ -125,6 +125,12 @@ fn reverse(lua: &Lua, t: LuaTable) -> LuaResult<()> {
     Ok(())
 }
 
+fn reverse_clone(lua: &Lua, t: LuaTable) -> LuaResult<LuaTable> {
+    let t = clone(lua, t)?;
+    reverse(lua, t.clone())?;
+    Ok(t)
+}
+
 fn some(lua: &Lua, (t, f): (LuaTable, LuaFunction)) -> LuaResult<bool> {
     let len = len(lua, t.clone())?;
     let mut i = 1 as LuaInteger;
@@ -151,6 +157,7 @@ pub fn module(lua: &Lua) -> LuaResult<LuaTable> {
     exports.set("map", lua.create_function(map)?)?;
     exports.set("push", lua.create_function(push)?)?;
     exports.set("reverse", lua.create_function(reverse)?)?;
+    exports.set("reverse_clone", lua.create_function(reverse_clone)?)?;
     exports.set("some", lua.create_function(some)?)?;
     Ok(exports)
 }
