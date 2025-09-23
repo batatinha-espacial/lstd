@@ -110,6 +110,16 @@ fn map_this(lua: &Lua, (t, f): (LuaTable, LuaFunction)) -> LuaResult<()> {
     Ok(())
 }
 
+fn pop(lua: &Lua, t: LuaTable) -> LuaResult<LuaValue> {
+    let len = len(lua, t.clone())?;
+    if len == 0 {
+        return Ok(LuaNil);
+    }
+    let e = t.get::<LuaValue>(len)?;
+    t.set(len, LuaNil)?;
+    Ok(e)
+}
+
 fn push(lua: &Lua, (t, args): (LuaTable, LuaVariadic<LuaValue>)) -> LuaResult<LuaInteger> {
     let mut len = len(lua, t.clone())?;
     for i in args {
@@ -162,6 +172,7 @@ pub fn module(lua: &Lua) -> LuaResult<LuaTable> {
     exports.set("len", lua.create_function(len)?)?;
     exports.set("map", lua.create_function(map)?)?;
     exports.set("map_this", lua.create_function(map_this)?)?;
+    exports.set("pop", lua.create_function(pop)?)?;
     exports.set("push", lua.create_function(push)?)?;
     exports.set("reverse", lua.create_function(reverse)?)?;
     exports.set("reverse_clone", lua.create_function(reverse_clone)?)?;
