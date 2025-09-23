@@ -22,6 +22,17 @@ fn cwd(_: &Lua, _: ()) -> LuaResult<String> {
     Ok(std::env::current_dir().map_err(|_| LuaError::RuntimeError("unable to get cwd".to_string()))?.display().to_string())
 }
 
+fn eprint(_: &Lua, args: LuaVariadic<String>) -> LuaResult<()> {
+    eprintln!("{}", args.join("\t"));
+    Ok(())
+}
+
+fn eprintnnl(_: &Lua, args: LuaVariadic<String>) -> LuaResult<()> {
+    eprint!("{}", args.join("\t"));
+    let _ = std::io::stderr().flush();
+    Ok(())
+}
+
 mod io;
 
 fn ord(_: &Lua, s: String) -> LuaResult<LuaInteger> {
@@ -54,6 +65,8 @@ fn module(lua: &Lua) -> LuaResult<LuaTable> {
     exports.set("btoa", lua.create_function(btoa)?)?;
     exports.set("chr", lua.create_function(chr)?)?;
     exports.set("cwd", lua.create_function(cwd)?)?;
+    exports.set("eprint", lua.create_function(eprint)?)?;
+    exports.set("eprintnnl", lua.create_function(eprintnnl)?)?;
     exports.set("io", io::module(lua)?)?;
     exports.set("ord", lua.create_function(ord)?)?;
     exports.set("print", lua.create_function(print)?)?;
