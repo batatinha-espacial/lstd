@@ -91,6 +91,19 @@ fn len(_: &Lua, t: LuaTable) -> LuaResult<LuaInteger> {
     Ok(i as LuaInteger)
 }
 
+fn map(lua: &Lua, (t, f): (LuaTable, LuaFunction)) -> LuaResult<LuaTable> {
+    let t2 = lua.create_table()?;
+    let len = len(lua, t.clone())?;
+    let mut i = 1 as LuaInteger;
+    while i <= len {
+        let e = t.get::<LuaValue>(i)?;
+        let e = f.call::<LuaValue>(e)?;
+        t2.set(i, e)?;
+        i += 1;
+    }
+    Ok(t2)
+}
+
 fn push(lua: &Lua, (t, args): (LuaTable, LuaVariadic<LuaValue>)) -> LuaResult<LuaInteger> {
     let mut len = len(lua, t.clone())?;
     for i in args {
@@ -135,6 +148,7 @@ pub fn module(lua: &Lua) -> LuaResult<LuaTable> {
     exports.set("deepclone", lua.create_function(deepclone)?)?;
     exports.set("every", lua.create_function(every)?)?;
     exports.set("len", lua.create_function(len)?)?;
+    exports.set("map", lua.create_function(map)?)?;
     exports.set("push", lua.create_function(push)?)?;
     exports.set("reverse", lua.create_function(reverse)?)?;
     exports.set("some", lua.create_function(some)?)?;
