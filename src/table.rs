@@ -161,6 +161,49 @@ fn some(lua: &Lua, (t, f): (LuaTable, LuaFunction)) -> LuaResult<bool> {
     Ok(false)
 }
 
+fn sort(lua: &Lua, (t, f): (LuaTable, LuaFunction)) -> LuaResult<()> {
+    let len = len(lua, t.clone())?;
+    let a = t;
+    let b = lua.create_table()?;
+    {
+        let mut k = 0;
+        while k < len {
+            b.set(k+1, a.get::<LuaValue>(k+1)?)?;
+            k += 1;
+        }
+    }
+    sort_topdownsplitmerge_(a, 0,len, b, f)?;
+    Ok(())
+}
+
+fn sort_topdownmerge_(b: LuaTable, ibegin: LuaInteger, imiddle: LuaInteger, iend: LuaInteger, a: LuaTable, f: LuaFunction) -> LuaResult<()> {
+    let mut i = ibegin;
+    let mut j = imiddle;
+    let mut k = ibegin;
+    while k < iend {
+        if i < imiddle && (j >= iend || f.call::<LuaInteger>((a.get::<LuaValue>(i+1)?, a.get::<LuaValue>(j+1)?))? <= 0) {
+            b.set(k+1, a.get::<LuaValue>(i+1)?)?;
+            i += 1;
+        } else {
+            b.set(k+1, a.get::<LuaValue>(j+1)?)?;
+            j += 1;
+        }
+        k += 1;
+    }
+    Ok(())
+}
+
+fn sort_topdownsplitmerge_(b: LuaTable, ibegin: LuaInteger, iend: LuaInteger, a: LuaTable, f: LuaFunction) -> LuaResult<()> {
+    if iend - ibegin <= 1 {
+        return Ok(());
+    }
+    let imiddle = (iend + ibegin) / 2;
+    sort_topdownsplitmerge_(a.clone(), ibegin, imiddle, b.clone(), f.clone())?;
+    sort_topdownsplitmerge_(a.clone(), imiddle, iend, b.clone(), f.clone())?;
+    sort_topdownmerge_(b, ibegin, imiddle, iend, a, f)?;
+    Ok(())
+}
+
 pub fn module(lua: &Lua) -> LuaResult<LuaTable> {
     let exports = lua.create_table()?;
     exports.set("assign", lua.create_function(assign)?)?;
@@ -177,5 +220,6 @@ pub fn module(lua: &Lua) -> LuaResult<LuaTable> {
     exports.set("reverse", lua.create_function(reverse)?)?;
     exports.set("reverse_clone", lua.create_function(reverse_clone)?)?;
     exports.set("some", lua.create_function(some)?)?;
+    exports.set("sort", lua.create_function(sort)?)?;
     Ok(exports)
 }
