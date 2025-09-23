@@ -18,6 +18,10 @@ fn chr(_: &Lua, u: LuaInteger) -> LuaResult<String> {
     }
 }
 
+fn clear(_: &Lua, _: ()) -> LuaResult<()> {
+    rustyline::DefaultEditor::new().map_err(|_| LuaError::RuntimeError("couldn't clear screen".to_string()))?.clear_screen().map_err(|_| LuaError::RuntimeError("couldn't clear screen".to_string()))
+}
+
 fn clock(_: &Lua, _: ()) -> LuaResult<LuaInteger> {
     let time = std::time::SystemTime::now();
     Ok(match time.duration_since(std::time::UNIX_EPOCH) {
@@ -80,6 +84,7 @@ fn module(lua: &Lua) -> LuaResult<LuaTable> {
     exports.set("atob", lua.create_function(atob)?)?;
     exports.set("btoa", lua.create_function(btoa)?)?;
     exports.set("chr", lua.create_function(chr)?)?;
+    exports.set("clear", lua.create_function(clear)?)?;
     exports.set("clock", lua.create_function(clock)?)?;
     exports.set("cwd", lua.create_function(cwd)?)?;
     exports.set("eprint", lua.create_function(eprint)?)?;
