@@ -106,6 +106,14 @@ fn map(lua: &Lua, (t, f): (LuaTable, LuaFunction)) -> LuaResult<LuaTable> {
 
 fn map_this(lua: &Lua, (t, f): (LuaTable, LuaFunction)) -> LuaResult<()> {
     let t2 = map(lua, (t.clone(), f))?;
+    {
+        let len = len(lua, t.clone())?;
+        let mut i = 1 as LuaInteger;
+        while i <= len {
+            t.set(i, LuaNil)?;
+            i += 1;
+        }
+    }
     assign(lua, (t, t2))?;
     Ok(())
 }
@@ -176,6 +184,12 @@ fn sort(lua: &Lua, (t, f): (LuaTable, LuaFunction)) -> LuaResult<()> {
     Ok(())
 }
 
+fn sort_clone(lua: &Lua, (t, f): (LuaTable, LuaFunction)) -> LuaResult<LuaTable> {
+    let t = clone(lua, t)?;
+    sort(lua, (t.clone(), f))?;
+    Ok(t)
+}
+
 fn sort_topdownmerge_(b: LuaTable, ibegin: LuaInteger, imiddle: LuaInteger, iend: LuaInteger, a: LuaTable, f: LuaFunction) -> LuaResult<()> {
     let mut i = ibegin;
     let mut j = imiddle;
@@ -204,6 +218,36 @@ fn sort_topdownsplitmerge_(b: LuaTable, ibegin: LuaInteger, iend: LuaInteger, a:
     Ok(())
 }
 
+fn unique(lua: &Lua, t: LuaTable) -> LuaResult<LuaTable> {
+    let t2 = lua.create_table()?;
+    let len = len(lua, t.clone())?;
+    let mut i = 1 as LuaInteger;
+    let mut i2 = 1 as LuaInteger;
+    while i <= len {
+        let e = t.get::<LuaValue>(i)?;
+        if !contains(lua, (t2.clone(), e.clone()))? {
+            t2.set(i2, e)?;
+            i2 += 1;
+        }
+        i += 1;
+    }
+    Ok(t2)
+}
+
+fn unique_this(lua: &Lua, t: LuaTable) -> LuaResult<()> {
+    let t2 = unique(lua, t.clone())?;
+    {
+        let len = len(lua, t.clone())?;
+        let mut i = 1 as LuaInteger;
+        while i <= len {
+            t.set(i, LuaNil)?;
+            i += 1;
+        }
+    }
+    assign(lua, (t, t2))?;
+    Ok(())
+}
+
 pub fn module(lua: &Lua) -> LuaResult<LuaTable> {
     let exports = lua.create_table()?;
     exports.set("assign", lua.create_function(assign)?)?;
@@ -221,5 +265,8 @@ pub fn module(lua: &Lua) -> LuaResult<LuaTable> {
     exports.set("reverse_clone", lua.create_function(reverse_clone)?)?;
     exports.set("some", lua.create_function(some)?)?;
     exports.set("sort", lua.create_function(sort)?)?;
+    exports.set("sort_clone", lua.create_function(sort_clone)?)?;
+    exports.set("unique", lua.create_function(unique)?)?;
+    exports.set("unique_this", lua.create_function(unique_this)?)?;
     Ok(exports)
 }
