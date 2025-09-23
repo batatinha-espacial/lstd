@@ -11,6 +11,21 @@ fn assign(_: &Lua, (outt, int): (LuaTable, LuaTable)) -> LuaResult<()> {
     Ok(())
 }
 
+fn concat(lua: &Lua, t: LuaVariadic<LuaTable>) -> LuaResult<LuaTable> {
+    let t2 = lua.create_table()?;
+    let mut index = 1 as LuaInteger;
+    for i in t {
+        let len = len(lua, i.clone())?;
+        let mut j = 1 as LuaInteger;
+        while j <= len {
+            t2.set(index, i.get::<LuaValue>(j)?)?;
+            index += 1;
+            j += 1;
+        }
+    }
+    Ok(t2)
+}
+
 fn contains(lua: &Lua, (t, v): (LuaTable, LuaValue)) -> LuaResult<bool> {
     let len = len(lua, t.clone())?;
     let mut i = 1 as LuaInteger;
@@ -114,6 +129,7 @@ fn some(lua: &Lua, (t, f): (LuaTable, LuaFunction)) -> LuaResult<bool> {
 pub fn module(lua: &Lua) -> LuaResult<LuaTable> {
     let exports = lua.create_table()?;
     exports.set("assign", lua.create_function(assign)?)?;
+    exports.set("concat", lua.create_function(concat)?)?;
     exports.set("contains", lua.create_function(contains)?)?;
     exports.set("clone", lua.create_function(clone)?)?;
     exports.set("deepclone", lua.create_function(deepclone)?)?;
