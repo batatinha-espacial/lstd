@@ -85,6 +85,18 @@ fn push(lua: &Lua, (t, args): (LuaTable, LuaVariadic<LuaValue>)) -> LuaResult<Lu
     Ok(len)
 }
 
+fn reverse(lua: &Lua, t: LuaTable) -> LuaResult<()> {
+    let count = len(lua, t.clone())?;
+    let mut i = 0 as LuaInteger;
+    while i < count/2 {
+        let temp = t.get::<LuaValue>(count-i)?;
+        t.set(count-i, t.get::<LuaValue>(i+1)?)?;
+        t.set(i+1, temp)?;
+        i += 1;
+    }
+    Ok(())
+}
+
 fn some(lua: &Lua, (t, f): (LuaTable, LuaFunction)) -> LuaResult<bool> {
     let len = len(lua, t.clone())?;
     let mut i = 1 as LuaInteger;
@@ -108,6 +120,7 @@ pub fn module(lua: &Lua) -> LuaResult<LuaTable> {
     exports.set("every", lua.create_function(every)?)?;
     exports.set("len", lua.create_function(len)?)?;
     exports.set("push", lua.create_function(push)?)?;
+    exports.set("reverse", lua.create_function(reverse)?)?;
     exports.set("some", lua.create_function(some)?)?;
     Ok(exports)
 }
