@@ -78,6 +78,37 @@ fn every(lua: &Lua, (t, f): (LuaTable, LuaFunction)) -> LuaResult<bool> {
     Ok(true)
 }
 
+fn filter(lua: &Lua, (t, f): (LuaTable, LuaFunction)) -> LuaResult<LuaTable> {
+    let t2 = lua.create_table()?;
+    let len = len(lua, t.clone())?;
+    let mut i = 1 as LuaInteger;
+    let mut i2 = 1 as LuaInteger;
+    while i <= len {
+        let e = t.get::<LuaValue>(i)?;
+        let b = f.call::<bool>(e.clone())?;
+        if b {
+            t2.set(i2, e)?;
+            i2 += 1;
+        }
+        i += 1;
+    }
+    Ok(t2)
+}
+
+fn filter_this(lua: &Lua, (t, f): (LuaTable, LuaFunction)) -> LuaResult<()> {
+    let t2 = filter(lua, (t.clone(), f))?;
+    {
+        let len = len(lua, t.clone())?;
+        let mut i = 1 as LuaInteger;
+        while i <= len {
+            t.set(i, LuaNil)?;
+            i += 1;
+        }
+    }
+    assign(lua, (t, t2))?;
+    Ok(())
+}
+
 fn len(_: &Lua, t: LuaTable) -> LuaResult<LuaInteger> {
     let mut i = 0usize;
     loop {
@@ -256,6 +287,8 @@ pub fn module(lua: &Lua) -> LuaResult<LuaTable> {
     exports.set("clone", lua.create_function(clone)?)?;
     exports.set("deepclone", lua.create_function(deepclone)?)?;
     exports.set("every", lua.create_function(every)?)?;
+    exports.set("filter", lua.create_function(filter)?)?;
+    exports.set("filter_this", lua.create_function(filter_this)?)?;
     exports.set("len", lua.create_function(len)?)?;
     exports.set("map", lua.create_function(map)?)?;
     exports.set("map_this", lua.create_function(map_this)?)?;
