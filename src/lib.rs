@@ -66,6 +66,14 @@ mod string;
 
 mod table;
 
+fn termsize(_: &Lua, _: ()) -> LuaResult<(LuaInteger, LuaInteger)> {
+    if let Some((w, h)) = term_size::dimensions() {
+        Ok((w as LuaInteger, h as LuaInteger))
+    } else {
+        Err(LuaError::RuntimeError("couldn't get terminal size".to_string()))
+    }
+}
+
 #[mlua::lua_module(name = "lstd")]
 fn module(lua: &Lua) -> LuaResult<LuaTable> {
     let exports = lua.create_table()?;
@@ -82,5 +90,6 @@ fn module(lua: &Lua) -> LuaResult<LuaTable> {
     exports.set("printnnl", lua.create_function(printnnl)?)?;
     exports.set("string", string::module(lua)?)?;
     exports.set("table", table::module(lua)?)?;
+    exports.set("termsize", lua.create_function(termsize)?)?;
     Ok(exports)
 }

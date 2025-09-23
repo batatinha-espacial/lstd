@@ -9,3 +9,4 @@ crate-type = ["cdylib"]
 [dependencies]
 mlua = { version = "0.11", features = ["luajit", "module"] }
 chromium-base64-rs = "0.1.0"
+term_size = "0.3.2"
