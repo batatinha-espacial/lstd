@@ -74,6 +74,11 @@ fn printnnl(_: &Lua, args: LuaVariadic<String>) -> LuaResult<()> {
     Ok(())
 }
 
+fn sleep(_: &Lua, t: LuaInteger) -> LuaResult<()> {
+    std::thread::sleep(std::time::Duration::from_millis(t as u64));
+    Ok(())
+}
+
 mod string;
 
 mod table;
@@ -84,6 +89,13 @@ fn termsize(_: &Lua, _: ()) -> LuaResult<(LuaInteger, LuaInteger)> {
     } else {
         Err(LuaError::RuntimeError("couldn't get terminal size".to_string()))
     }
+}
+
+fn time(_: &Lua, (f, args): (LuaFunction, LuaMultiValue)) -> LuaResult<(LuaInteger, LuaMultiValue)> {
+    let t1 = std::time::Instant::now();
+    let r = f.call(args)?;
+    let t2 = std::time::Instant::now();
+    Ok(((t2 - t1).as_nanos() as LuaInteger, r))
 }
 
 #[mlua::lua_module(name = "lstd")]
@@ -102,8 +114,10 @@ fn module(lua: &Lua) -> LuaResult<LuaTable> {
     exports.set("ord", lua.create_function(ord)?)?;
     exports.set("print", lua.create_function(print)?)?;
     exports.set("printnnl", lua.create_function(printnnl)?)?;
+    exports.set("sleep", lua.create_function(sleep)?)?;
     exports.set("string", string::module(lua)?)?;
     exports.set("table", table::module(lua)?)?;
     exports.set("termsize", lua.create_function(termsize)?)?;
+    exports.set("time", lua.create_function(time)?)?;
     Ok(exports)
 }
