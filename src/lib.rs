@@ -30,6 +30,14 @@ fn clock(_: &Lua, _: ()) -> LuaResult<LuaInteger> {
     })
 }
 
+fn clock_nano(_: &Lua, _: ()) -> LuaResult<(LuaInteger, LuaInteger)> {
+    let time = std::time::SystemTime::now();
+    Ok(match time.duration_since(std::time::UNIX_EPOCH) {
+        Ok(r) => (r.as_secs() as LuaInteger, r.subsec_nanos() as LuaInteger),
+        Err(e) => (-(e.duration().as_secs() as LuaInteger), e.duration().subsec_nanos() as LuaInteger),
+    })
+}
+
 fn cwd(_: &Lua, _: ()) -> LuaResult<String> {
     Ok(std::env::current_dir().map_err(|_| LuaError::RuntimeError("unable to get cwd".to_string()))?.display().to_string())
 }
@@ -86,6 +94,7 @@ fn module(lua: &Lua) -> LuaResult<LuaTable> {
     exports.set("chr", lua.create_function(chr)?)?;
     exports.set("clear", lua.create_function(clear)?)?;
     exports.set("clock", lua.create_function(clock)?)?;
+    exports.set("clock_nano", lua.create_function(clock_nano)?)?;
     exports.set("cwd", lua.create_function(cwd)?)?;
     exports.set("eprint", lua.create_function(eprint)?)?;
     exports.set("eprintnnl", lua.create_function(eprintnnl)?)?;
